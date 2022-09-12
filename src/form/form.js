@@ -3,7 +3,40 @@ import './form.scss';
 
 const form = document.querySelector('form');
 const errorElement = document.querySelector('#errors');
+const btnCancel = document.querySelector('.btn-secondary');
+
 let errors = [];
+let articleId;
+
+const initForm = async () => {
+  const params = new URL(window.location.href);
+  articleId = params.searchParams.get('id');
+  if (articleId) {
+    const response = await fetch(`https://restapi.fr/api/article/${articleId}`);
+    if (response.status < 300) {
+      const article = await response.json();
+      fillForm(article);
+    }
+  }
+};
+initForm();
+
+const fillForm = (article) => {
+  const author = document.querySelector('input[name="author"]');
+  const img = document.querySelector('input[name="img"]');
+  const title = document.querySelector('input[name="title"]');
+  const category = document.querySelector('input[name="category"]');
+  const content = document.querySelector('textarea');
+  author.value = article.author || '';
+  img.value = article.img || '';
+  title.value = article.title || '';
+  category.value = article.category || '';
+  content.value = article.content || '';
+};
+
+btnCancel.addEventListener('click', (event) => {
+  window.location.assign('/index.html');
+});
 
 // collect form data
 form.addEventListener('submit', async (event) => {
@@ -13,16 +46,28 @@ form.addEventListener('submit', async (event) => {
   if (formIsValid(article)) {
     try {
       const json = JSON.stringify(article);
-      const response = await fetch('https://restapi.fr/api/article', {
-        method: 'POST',
-        body: json,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
+      let response;
+      if (articleId) {
+        response = await fetch(`https://restapi.fr/api/article/${articleId}`, {
+          method: 'PATCH',
+          body: json,
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+      } else {
+        response = await fetch('https://restapi.fr/api/article', {
+          method: 'POST',
+          body: json,
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+      }
 
-      const body = await response.json();
-      console.log(body);
+      if (response.status < 299) {
+        window.location.assign('/index.html');
+      }
     } catch (e) {
       console.error('e :', e);
     }
@@ -31,6 +76,7 @@ form.addEventListener('submit', async (event) => {
 
 // error function if each input aren't fill
 const formIsValid = (article) => {
+  errors = [];
   if (
     !article.author ||
     !article.category ||

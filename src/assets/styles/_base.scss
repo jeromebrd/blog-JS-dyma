@@ -40,3 +40,8 @@ a {
   color: var(--text);
   text-decoration: none;
 }
+
+strong {
+  color: var(--accent);
+  transition: color 0.2s;
+}

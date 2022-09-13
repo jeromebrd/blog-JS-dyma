@@ -2,6 +2,7 @@ import './assets/styles/styles.scss';
 import './index.scss';
 
 const articleContainerElement = document.querySelector('.articles-container');
+const categoriesContainerElement = document.querySelector('.categories');
 
 // To create an article on the dom
 const createArticles = (articles) => {
@@ -65,6 +66,33 @@ const createArticles = (articles) => {
   });
 };
 
+// Category menu
+
+const displayMenuCategories = (categoriesArr) => {
+  const liElement = categoriesArr.map((categoryElem) => {
+    const li = document.createElement('li');
+    li.innerHTML = `<li>${categoryElem[0]} ( <strong>${categoryElem[1]}</strong> )</li>`;
+    return li;
+  });
+  categoriesContainerElement.innerHTML = '';
+  categoriesContainerElement.append(...liElement);
+};
+
+const createMenuCategories = (articles) => {
+  const categories = articles.reduce((acc, curr) => {
+    if (acc[curr.category]) {
+      acc[curr.category]++;
+    } else {
+      acc[curr.category] = 1;
+    }
+    return acc;
+  }, {});
+  const categoriesArr = Object.keys(categories).map((category) => {
+    return [category, categories[category]];
+  });
+  displayMenuCategories(categoriesArr);
+};
+
 // To collect articles on the server with fetch :  resquet HTTP with GET method
 
 const fetchArticle = async () => {
@@ -72,6 +100,7 @@ const fetchArticle = async () => {
     const response = await fetch('https://restapi.fr/api/article');
     const articles = await response.json();
     createArticles(articles);
+    createMenuCategories(articles);
   } catch (e) {
     console.log('e :', e);
   }

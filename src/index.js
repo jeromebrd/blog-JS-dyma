@@ -3,34 +3,44 @@ import './index.scss';
 
 const articleContainerElement = document.querySelector('.articles-container');
 const categoriesContainerElement = document.querySelector('.categories');
+let articles;
+let filter;
 
 // To create an article on the dom
-const createArticles = (articles) => {
-  const articlesDOM = articles.map((article) => {
-    const articleDOM = document.createElement('div');
-    articleDOM.classList.add('article');
-    articleDOM.innerHTML = `
+const createArticles = () => {
+  const articlesDOM = articles
+    .filter((article) => {
+      if (filter) {
+        return article.category === filter;
+      } else {
+        return true;
+      }
+    })
+    .map((article) => {
+      const articleDOM = document.createElement('div');
+      articleDOM.classList.add('article');
+      articleDOM.innerHTML = `
     <img
       src="${article.img}"
       alt="profile"
     />
     <h2>${article.title}</h2>
     <p class="article-author">${article.author} - ${
-      article.category
-    } - ${new Date(article.createdAt).toLocaleDateString('fr-FR', {
-      weekday: 'long',
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-    })}</p>
+        article.category
+      } - ${new Date(article.createdAt).toLocaleDateString('fr-FR', {
+        weekday: 'long',
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+      })}</p>
     <p class="article-content">${article.content}</p>
     <div class="article-actions">
       <button class="btn btn-danger" data-id=${article._id}>Supprimer</button>
       <button class="btn btn-primary" data-id=${article._id}>Modifier</button>
     </div>
   `;
-    return articleDOM;
-  });
+      return articleDOM;
+    });
   articleContainerElement.innerHTML = '';
   articleContainerElement.append(...articlesDOM);
   const deleteButtons = articleContainerElement.querySelectorAll('.btn-danger');
@@ -71,14 +81,27 @@ const createArticles = (articles) => {
 const displayMenuCategories = (categoriesArr) => {
   const liElement = categoriesArr.map((categoryElem) => {
     const li = document.createElement('li');
-    li.innerHTML = `<li>${categoryElem[0]} ( <strong>${categoryElem[1]}</strong> )</li>`;
+    li.innerHTML = `${categoryElem[0]} ( <strong>${categoryElem[1]}</strong> )`;
+    li.addEventListener('click', () => {
+      if (filter === categoryElem[0]) {
+        filter = null;
+        li.classList.remove('active');
+      } else {
+        filter = categoryElem[0];
+        liElement.forEach((li) => {
+          li.classList.remove('active');
+        });
+        li.classList.add('active');
+      }
+      createArticles();
+    });
     return li;
   });
   categoriesContainerElement.innerHTML = '';
   categoriesContainerElement.append(...liElement);
 };
 
-const createMenuCategories = (articles) => {
+const createMenuCategories = () => {
   const categories = articles.reduce((acc, curr) => {
     if (acc[curr.category]) {
       acc[curr.category]++;
@@ -87,9 +110,11 @@ const createMenuCategories = (articles) => {
     }
     return acc;
   }, {});
-  const categoriesArr = Object.keys(categories).map((category) => {
-    return [category, categories[category]];
-  });
+  const categoriesArr = Object.keys(categories)
+    .map((category) => {
+      return [category, categories[category]];
+    })
+    .sort((c1, c2) => c1[0].localeCompare(c2[0]));
   displayMenuCategories(categoriesArr);
 };
 
@@ -98,9 +123,9 @@ const createMenuCategories = (articles) => {
 const fetchArticle = async () => {
   try {
     const response = await fetch('https://restapi.fr/api/article');
-    const articles = await response.json();
-    createArticles(articles);
-    createMenuCategories(articles);
+    articles = await response.json();
+    createArticles();
+    createMenuCategories();
   } catch (e) {
     console.log('e :', e);
   }

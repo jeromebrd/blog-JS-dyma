@@ -3,8 +3,17 @@ import './index.scss';
 
 const articleContainerElement = document.querySelector('.articles-container');
 const categoriesContainerElement = document.querySelector('.categories');
+const selectElement = document.querySelector('select');
 let articles;
 let filter;
+let sortBy = 'desc';
+
+// select menu : from newest to oldest or from oldest to newest
+
+selectElement.addEventListener('change', () => {
+  sortBy = selectElement.value;
+  fetchArticle();
+});
 
 // To create an article on the dom
 const createArticles = () => {
@@ -82,6 +91,9 @@ const displayMenuCategories = (categoriesArr) => {
   const liElement = categoriesArr.map((categoryElem) => {
     const li = document.createElement('li');
     li.innerHTML = `${categoryElem[0]} ( <strong>${categoryElem[1]}</strong> )`;
+    if (categoryElem[0] === filter) {
+      li.classList.add('active');
+    }
     li.addEventListener('click', () => {
       if (filter === categoryElem[0]) {
         filter = null;
@@ -122,7 +134,9 @@ const createMenuCategories = () => {
 
 const fetchArticle = async () => {
   try {
-    const response = await fetch('https://restapi.fr/api/article');
+    const response = await fetch(
+      `https://restapi.fr/api/article?sort=createdAt:${sortBy}`
+    );
     articles = await response.json();
     createArticles();
     createMenuCategories();

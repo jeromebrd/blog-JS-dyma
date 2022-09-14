@@ -1,5 +1,6 @@
 import '../assets/styles/styles.scss';
 import './form.scss';
+import { openModal } from '../assets/javascripts/modal';
 
 const form = document.querySelector('form');
 const errorElement = document.querySelector('#errors');
@@ -34,8 +35,13 @@ const fillForm = (article) => {
   content.value = article.content || '';
 };
 
-btnCancel.addEventListener('click', (event) => {
-  window.location.assign('/index.html');
+btnCancel.addEventListener('click', async () => {
+  const result = await openModal(
+    'Si vous quittez la page, vous perdrez votre article'
+  );
+  if (result) {
+    window.location.assign('/index.html');
+  }
 });
 
 // collect form data
